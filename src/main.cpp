@@ -2,6 +2,8 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include "executer.h"
+
 using namespace std;
 
 int main(int argc, char* argv[]) {
@@ -43,6 +45,45 @@ int main(int argc, char* argv[]) {
     if (binary.empty()) {
         cerr << "Error: --exe is required.\n";
         return 1;
+    }
+
+    vector<char*> target_argv;
+    for (const auto& arg : binary_with_args) {
+        target_argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+    target_argv.push_back(nullptr);
+
+    Executor executor;
+    double runtime = 0.0;
+    size_t peakMemory = 0;
+    int exitCode = 0;
+    bool killed = false;
+    int PID = 0;
+    std::vector<size_t> memSamples;
+
+    executor.execute(
+        binary,
+        target_argv.data(),
+        runtime,
+        maxMem,
+        maxTime,
+        nobody_uid,
+        chrootDir,
+        &peakMemory,
+        &killed,
+        &exitCode,
+        &memSamples
+    );
+
+    std::cout << "\nPID: " << PID << "\n"
+              << "Runtime: " << runtime << "s\n"
+              << "Peak Memory: " << peakMemory << " KB\n"
+              << "Exit Code: " << exitCode << "\n"
+              << "Killed: " << (killed ? "true" : "false") << "\n";
+
+    std::cout << "\nMemory usage samples (every 100ms):\n";
+    for (size_t i = 0; i < memSamples.size(); ++i) {
+        std::cout << (i * 100) << " ms: " << memSamples[i] << " KB\n";
     }
 
     return 0;
