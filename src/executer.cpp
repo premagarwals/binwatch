@@ -17,7 +17,7 @@ using namespace std;
 Executor::Executor() {}
 
 int Executor::execute(const string& binary, char* const argv[], double& runtime,
-                      int maxMem, int maxTime, int nobody_uid, bool sandbox, const string& chrootDir,
+                      size_t maxMem, int maxTime, int nobody_uid, bool sandbox, const string& chrootDir,
                       size_t* peakMemoryOut, bool* killedOut, int* exitCodeOut,
                       vector<size_t>* memSamplesOut) {
     pid_t pid = fork();
@@ -36,7 +36,7 @@ int Executor::execute(const string& binary, char* const argv[], double& runtime,
         cerr << "Execution failed for: " << binary << endl;
         _exit(EXIT_FAILURE);
     } else {
-        auto start = std::chrono::steady_clock::now();
+        auto start = chrono::steady_clock::now();
         size_t peakMemory = 0;
         bool killed = false;
         int exitCode = -1;
@@ -55,6 +55,12 @@ int Executor::execute(const string& binary, char* const argv[], double& runtime,
                 size_t mem_kb = rss * (getpagesize() / 1024);
                 mem_samples.push_back(mem_kb);
                 if (mem_kb > peakMemory) peakMemory = mem_kb;
+                if (peakMemory > maxMem) {
+                    kill(pid, SIGKILL);
+                    killed = true;
+                    waitpid(pid, &status, 0);
+                    break;
+                }
             }
 
             auto now = chrono::steady_clock::now();

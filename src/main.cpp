@@ -2,19 +2,23 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include <algorithm>
+
 #include "executer.h"
 
 using namespace std;
 
+void printMemoryGraph(const vector<size_t>& memSamples);
+
 int main(int argc, char* argv[]) {
     string binary; // Path to the executable
-    int maxMem = 32768; // Default memory limit is approx 32MB
+    size_t maxMem = 32768; // Default memory limit is approx 32MB
     int maxTime = 10;  //Default time limit is 10 seconds
     string chrootDir; //Sandbox directory
     int nobody_uid = 65534; // Using this UID to remove all permissions
     bool sandbox = false; // disable sandboxing by default
 
-    vector<std::string> binary_with_args;
+    vector<string> binary_with_args;
     
     for (int i = 1; i < argc; ++i) {
         if ((strcmp(argv[i], "-exe") == 0 || strcmp(argv[i], "-e") == 0) && i + 1 < argc) {
@@ -69,7 +73,7 @@ int main(int argc, char* argv[]) {
     int exitCode = 0;
     bool killed = false;
     int PID = 0;
-    std::vector<size_t> memSamples;
+    vector<size_t> memSamples;
 
     executor.execute(
         binary,
@@ -85,12 +89,32 @@ int main(int argc, char* argv[]) {
         &exitCode,
         &memSamples
     );
-
-    std::cout << "\nPID: " << PID << "\n"
+    cout << "\n:::::::::::::::::::: EXECUTION SUMMARY :::::::::::::::::::\n";
+    cout << "\nPID: " << PID << "\n"
               << "Runtime: " << runtime << "s\n"
               << "Peak Memory: " << peakMemory << " KB\n"
               << "Exit Code: " << exitCode << "\n"
               << "Killed: " << (killed ? "true" : "false") << "\n";
-
+    
+    printMemoryGraph(memSamples);
     return 0;
+}
+
+void printMemoryGraph(const vector<size_t>& memSamples) {
+    size_t maxWidth = 50;
+    if (memSamples.empty()) {
+        cout << "No memory samples collected.\n";
+        return;
+    }
+    size_t maxMem = *max_element(memSamples.begin(), memSamples.end());
+    if (maxMem == 0) maxMem = 1;
+
+    cout << "\nMemory usage graph (in KB):\n";
+    for (size_t mem : memSamples) {
+        size_t barLen = (mem * maxWidth) / maxMem;
+        cout << "|";
+        for (size_t i = 0; i < barLen; ++i) cout << "█";
+        for (size_t i = barLen; i < maxWidth; ++i) cout << " ";
+        cout << "| " << mem << " KB\n";
+    }
 }

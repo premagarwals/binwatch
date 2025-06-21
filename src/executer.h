@@ -12,7 +12,7 @@ public:
     int execute(const string& binaryPath,
                 char* const argv[],
                 double& runtime,
-                int maxMem,
+                size_t maxMem,
                 int maxTime,
                 int nobody_uid,
                 bool sandbox,
