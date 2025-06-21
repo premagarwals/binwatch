@@ -13,11 +13,14 @@ int Executor::execute(const std::string& binary, char* const argv[], double& run
     pid_t pid = fork();
 
     if (pid < 0) {
-        cerr << "Fork failed" << '\n';
+        cerr << "Fork failed" << endl;
         return -1;
     } else if (pid == 0) {
-        cout << "Executed: " << binary << '\n';
+        execvp(binary.c_str(), argv);
+        cerr << "Execution failed for: " << binary << endl;
+        _exit(EXIT_FAILURE);
     } else {
-        cout << "Child PID: " << pid << '\n';
+        cout << "Child PID: " << pid << endl;
+        return 0;
     }
 }
