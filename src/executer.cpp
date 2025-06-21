@@ -9,6 +9,7 @@
 #include <signal.h>
 
 #include "executer.h"
+#include "sandbox.h"
 
 using namespace std;
 
@@ -24,6 +25,12 @@ int Executor::execute(const std::string& binary, char* const argv[], double& run
         cerr << "Fork failed" << endl;
         return -1;
     } else if (pid == 0) {
+        Sandbox::setupSandbox(
+            chrootDir.empty() ? nullptr : chrootDir.c_str(),
+            nobody_uid,
+            maxMem,
+            maxTime
+        );
         execvp(binary.c_str(), argv);
         cerr << "Execution failed for: " << binary << endl;
         _exit(EXIT_FAILURE);

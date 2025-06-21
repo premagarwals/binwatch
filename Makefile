@@ -1,6 +1,6 @@
 CC = g++
 CFLAGS = -Wall -Wextra -std=c++17 -Iinclude
-SRC = src/main.cpp src/executer.cpp
+SRC = src/main.cpp src/executer.cpp src/sandbox.cpp
 OBJ = $(SRC:.cpp=.o)
 TARGET = binwatch
 
