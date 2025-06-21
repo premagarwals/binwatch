@@ -1,22 +1,23 @@
+#include <iostream>
 #include "executer.h"
+#include <unistd.h>
+
+using namespace std;
 
 Executor::Executor() {}
 
-int Executor::execute(const std::string& binaryPath,
-                      char* const argv[],
-                      double& runtime,
-                      int maxMem,
-                      int maxTime,
-                      int nobody_uid,
-                      const std::string& chrootDir,
-                      size_t* peakMemory,
-                      bool* killed,
-                      int* exitCodeOut,
+int Executor::execute(const std::string& binary, char* const argv[], double& runtime,
+                      int maxMem, int maxTime, int nobody_uid, const std::string& chrootDir,
+                      size_t* peakMemoryOut, bool* killedOut, int* exitCodeOut,
                       std::vector<size_t>* memSamplesOut) {
-    if (runtime) runtime = 0.0;
-    if (peakMemory) *peakMemory = 0;
-    if (killed) *killed = false;
-    if (exitCodeOut) *exitCodeOut = 0;
-    if (memSamplesOut) memSamplesOut->clear();
-    return 0;
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        cerr << "Fork failed" << '\n';
+        return -1;
+    } else if (pid == 0) {
+        cout << "Executed: " << binary << '\n';
+    } else {
+        cout << "Child PID: " << pid << '\n';
+    }
 }
