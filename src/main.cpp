@@ -12,11 +12,12 @@ int main(int argc, char* argv[]) {
     int maxTime = 10;  //Default time limit is 10 seconds
     string chrootDir; //Sandbox directory
     int nobody_uid = 65534; // Using this UID to remove all permissions
+    bool sandbox = false; // disable sandboxing by default
 
     vector<std::string> binary_with_args;
     
     for (int i = 1; i < argc; ++i) {
-        if ((strcmp(argv[i], "--exe") == 0 || strcmp(argv[i], "-e") == 0) && i + 1 < argc) {
+        if ((strcmp(argv[i], "-exe") == 0 || strcmp(argv[i], "-e") == 0) && i + 1 < argc) {
             for (int j = i + 1; j < argc; ++j) {
                 if (
                     strcmp(argv[j], "--max-mem") == 0 || strcmp(argv[j], "-m") == 0 ||
@@ -34,16 +35,25 @@ int main(int argc, char* argv[]) {
             maxMem = stoi(argv[++i]);
         } else if ((strcmp(argv[i], "--max-time") == 0 || strcmp(argv[i], "-t") == 0) && i + 1 < argc) {
             maxTime = stoi(argv[++i]);
+        } else if ((strcmp(argv[i], "--sandbox") == 0 || strcmp(argv[i], "-s") == 0) && i + 1 < argc) {
+            sandbox = true;
         } else if ((strcmp(argv[i], "--chroot") == 0 || strcmp(argv[i], "-c") == 0) && i + 1 < argc) {
+            sandbox = true;
             chrootDir = argv[++i];
         } else if ((strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)) {
-            cout << "Usage: " << argv[0] << " [--max-mem <KB>] [--max-time <sec>] [--chroot <dir>] --exe <path> [args...]\n";
+            cout << "\nUsage: \n\t" << argv[0] << " [--max-mem <KB>] [--max-time <sec>] -exe <command> [args...]\n";
+            cout << "\tsudo " << argv[0] << " [--max-mem <KB>] [--max-time <sec>] [--sandbox] -exe <command> [args...]\n";
+            cout << "\tsudo " << argv[0] << " [--max-mem <KB>] [--max-time <sec>] [--chroot <path>] -exe <command> [args...]\n";
+            cout << "\n\t--sandbox will drop the privileges of the process but will run in default directory.\n";
+            cout << "\t--chroot will drop the privileges of the process and run in the specified directory.\n";
+            cout << "\n\te.g. sudo " << argv[0] << " --max-mem 16384 --max-time 5 --chroot /path/to/sandbox -exe ls -l\n";
             return 0;
         }
     }
 
     if (binary.empty()) {
-        cerr << "Error: --exe is required.\n";
+        cerr << "Error: -exe is required.\n";
+        cerr << "Use --help or -h for usage information.\n";
         return 1;
     }
 
@@ -68,6 +78,7 @@ int main(int argc, char* argv[]) {
         maxMem,
         maxTime,
         nobody_uid,
+        sandbox,
         chrootDir,
         &peakMemory,
         &killed,

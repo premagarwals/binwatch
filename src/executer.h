@@ -13,6 +13,7 @@ public:
                 int maxMem,
                 int maxTime,
                 int nobody_uid,
+                bool sandbox,
                 const std::string& chrootDir,
                 size_t* peakMemory = nullptr,
                 bool* killed = nullptr,

@@ -16,7 +16,7 @@ using namespace std;
 Executor::Executor() {}
 
 int Executor::execute(const std::string& binary, char* const argv[], double& runtime,
-                      int maxMem, int maxTime, int nobody_uid, const std::string& chrootDir,
+                      int maxMem, int maxTime, int nobody_uid, bool sandbox, const string& chrootDir,
                       size_t* peakMemoryOut, bool* killedOut, int* exitCodeOut,
                       std::vector<size_t>* memSamplesOut) {
     pid_t pid = fork();
@@ -25,7 +25,7 @@ int Executor::execute(const std::string& binary, char* const argv[], double& run
         cerr << "Fork failed" << endl;
         return -1;
     } else if (pid == 0) {
-        Sandbox::setupSandbox(
+        if (sandbox) Sandbox::setupSandbox(
             chrootDir.empty() ? nullptr : chrootDir.c_str(),
             nobody_uid,
             maxMem,
