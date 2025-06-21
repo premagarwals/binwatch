@@ -10,15 +10,16 @@
 
 #include "executer.h"
 #include "sandbox.h"
+#include "logger.h"
 
 using namespace std;
 
 Executor::Executor() {}
 
-int Executor::execute(const std::string& binary, char* const argv[], double& runtime,
+int Executor::execute(const string& binary, char* const argv[], double& runtime,
                       int maxMem, int maxTime, int nobody_uid, bool sandbox, const string& chrootDir,
                       size_t* peakMemoryOut, bool* killedOut, int* exitCodeOut,
-                      std::vector<size_t>* memSamplesOut) {
+                      vector<size_t>* memSamplesOut) {
     pid_t pid = fork();
 
     if (pid < 0) {
@@ -82,6 +83,9 @@ int Executor::execute(const std::string& binary, char* const argv[], double& run
                 exitCode = WTERMSIG(status);
             }
         }
+
+        Logger logger("log.txt");
+        logger.logExecutionDetails(binary, pid, runtime, peakMemory, exitCode, killed);
 
         if (peakMemoryOut) *peakMemoryOut = peakMemory;
         if (killedOut) *killedOut = killed;

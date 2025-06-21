@@ -92,10 +92,5 @@ int main(int argc, char* argv[]) {
               << "Exit Code: " << exitCode << "\n"
               << "Killed: " << (killed ? "true" : "false") << "\n";
 
-    std::cout << "\nMemory usage samples (every 100ms):\n";
-    for (size_t i = 0; i < memSamples.size(); ++i) {
-        std::cout << (i * 100) << " ms: " << memSamples[i] << " KB\n";
-    }
-
     return 0;
 }
