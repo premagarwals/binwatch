@@ -1,6 +1,8 @@
 #include <iostream>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <iostream>
+#include <fstream>
 #include <chrono>
 #include <thread>
 #include <vector>
@@ -27,13 +29,25 @@ int Executor::execute(const std::string& binary, char* const argv[], double& run
         _exit(EXIT_FAILURE);
     } else {
         auto start = std::chrono::steady_clock::now();
-
+        size_t peakMemory = 0;
         bool killed = false;
         int exitCode = -1;
         int status = 0;
 
+        vector<size_t> mem_samples;
+
         while (true) {
             pid_t result = waitpid(pid, &status, WNOHANG);
+            string statm_path = "/proc/" + to_string(pid) + "/statm";
+            ifstream statm(statm_path);
+            size_t rss = 0;
+            if (statm) {
+                size_t dummy;
+                statm >> dummy >> rss;
+                size_t mem_kb = rss * (getpagesize() / 1024);
+                mem_samples.push_back(mem_kb);
+                if (mem_kb > peakMemory) peakMemory = mem_kb;
+            }
 
             auto now = chrono::steady_clock::now();
             double elapsed = chrono::duration<double>(now - start).count();
@@ -62,8 +76,10 @@ int Executor::execute(const std::string& binary, char* const argv[], double& run
             }
         }
 
+        if (peakMemoryOut) *peakMemoryOut = peakMemory;
         if (killedOut) *killedOut = killed;
         if (exitCodeOut) *exitCodeOut = exitCode;
+        if (memSamplesOut) *memSamplesOut = mem_samples;
 
         return exitCode;
     }
